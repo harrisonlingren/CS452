@@ -58,7 +58,7 @@ int main (int argc, char * argv[]) {
 		lastOddP = p - 2;
 	}
 
-	cout << "p: " << p << ", lastOddP: " << lastOddP << ", lastEvenP: " << lastEvenP << endl;
+	//cout << "p: " << p << ", lastOddP: " << lastOddP << ", lastEvenP: " << lastEvenP << endl;
 
   if (my_rank == 0) {
     MPI_Send(ring_message, strlen(ring_message) + 1, MPI_CHAR, 2, tag, MPI_COMM_WORLD);
