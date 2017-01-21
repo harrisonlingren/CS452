@@ -32,43 +32,31 @@ int main (int argc, char * argv[]) {
 
 	// THE REAL PROGRAM IS HERE
 
-  // 0. Non-parallel solution:
-  // double sum = 0;
-  // for (int i = 0; i < 300000; i++) {
-  //   sum += i;
-  // }
+  char * baton = message;
+  sprintf(message, "Sent list: ");
+  sprintf(baton + strlen(baton), "%d, ", my_rank);
 
-  // 1. know the problem
-  int n = 300000;
-  double sum = 0;
+  if (my_rank == 0) {
 
-  // 2. Break the problem down
-  int local_start = my_rank;
+    cout << "Cool runnings around the track with no potato number: " << my_rank << "!" << endl;
+    MPI_Send(baton, strlen(baton) + 1, MPI_CHAR, 1, tag, MPI_COMM_WORLD);
+    MPI_Recv(baton, 100, MPI_CHAR, p - 1, tag, MPI_COMM_WORLD, &status);
+    cout << "Declare a provisional victory lel" << endl;
+    cout << baton << endl;
 
-  // 3. Perform local work
-  double local_sum = 0;
-  for (int x = local_start; x < n; x += p) {
-    local_sum += x;
-  }
-
-  // 4. Combine local results back together again
-  // set overseer process to p0
-  if (my_rank != 0) {
-    MPI_Send(&local_sum, 1, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
   } else {
-    sum = local_sum;
-    double temp;
-    for (int x = 1; x < p; x++) {
-      MPI_Recv(&temp, 1, MPI_DOUBLE, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
-      sum += temp;
-    }
-  }
 
+    MPI_Recv(baton, 100, MPI_CHAR, ((my_rank + p - 1) % p), tag, MPI_COMM_WORLD, &status);
+    sprintf(baton + strlen(baton), "%d, ", my_rank);
+    cout << "Cool runnings around the track with no potato number: " << my_rank << "!" << endl;
+    MPI_Send(baton, strlen(baton) + 1, MPI_CHAR, ((my_rank + 1) % p), tag, MPI_COMM_WORLD);
+
+  }
 
 	// Shut down MPI
 	MPI_Finalize();
 
-  cout << sum << endl;
 
 	return 0;
 }
+

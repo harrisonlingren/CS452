@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mpi.h" // message passing interface
+#include <mpi.h> // message passing interface
 using namespace std;
 
 // Do this ONCE when you start up thomas
@@ -24,6 +24,8 @@ int main (int argc, char * argv[]) {
 
   srand(1251);
 
+	double the_max = 0; double the_min = 0; double the_avg = 0;
+
 	// Start MPI
 	MPI_Init(&argc, &argv);
 
@@ -35,76 +37,47 @@ int main (int argc, char * argv[]) {
 
 	// THE REAL PROGRAM IS HERE
 
-  // 0. Non-parallel solution:
-  // double sum = 0;
-  // for (int i = 0; i < 300000; i++) {
-  //   sum += i;
-  // }
+	// create the dataset
+	double a[20000];
+  int n = 20000;
+	cout << "Size: " << n << endl;
 
-  // 1. know the problem
-  int a[1000];
-  int n = (sizeof(a)/sizeof(*a));
+	if (my_rank == 0) {
+	  for (int x = 0; x < n; x++) {
+	    a[x] = rand() % 100;
+	  }
+	}
 
-  for (int x = 0; x < n; x++) {
-    a[x] = rand();
-  }
+	// divide the problem
+	int local_n = n / p;
+	double * local_a = new double[local_n];
 
-  // 2. Break the problem down
-  double the_max = 0;
-  double the_min = 0;
-  double the_avg = 0;
-  int local_start = my_rank;
+	MPI_Scatter(&a[0], local_n, MPI_DOUBLE, local_a, local_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-  // 3. Perform local work
-  double local_max = 0;
-  double local_min = 0;
-  double local_avg = 0;
-  for (int x = local_start; x < n; x += p) {
-    if (a[x] > local_max) {
-      local_max = a[x];
-    }
+	// local work
+	double local_max = 0;
+	double local_min = 0;
+	double local_avg = 0;
 
-    if (a[x] < local_min) {
-      local_min = a[x];
-    }
-  }
+	for (size_t x = 0; x < local_n; x++) {
+		if (local_a[x] > local_max) {
+			local_max = local_a[x];
+		}
+		if (local_a[x] < local_min) {
+			local_min = local_a[x];
+		}
+		local_avg += (local_a[x] / n);
+	}
 
-
-  // 4. Combine local results back together again
-  // set overseer process to p0
-  if (my_rank != 0) {
-    double results[3];
-    results[0] = local_max; results[1] = local_min; results[2] = local_avg;
-    MPI_Send(&results, 3, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
-
-  } else {
-    the_max = local_max;
-    the_min = local_min;
-
-    double temp;
-    for (int x = 1; x < p; x++) {
-      // get each set of results and parse
-      MPI_Recv(&temp, 1, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
-
-      // max
-      int max_index = (int) temp[0];
-      if (a[max_index] > the_max) {
-        the_max = a[max_index];
-      }
-
-      // min
-      int min_index = (int) temp[1];
-      if (a[min_index] > a[the_max]) {
-        the_max = a[min_index];
-      }
-
-      the_avg += ((double) temp[2] / n);
-    }
-  }
+	// Collect results and reduce
+	MPI_Allreduce(&local_max, &the_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+	MPI_Allreduce(&local_min, &the_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+	MPI_Allreduce(&local_avg, &the_avg, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
 	// Shut down MPI
 	MPI_Finalize();
 
+	the_avg = the_avg / p;
   cout << "Max: " << the_max << ", Min: " << the_min << ", Avg: " << the_avg << endl;
 
 	return 0;

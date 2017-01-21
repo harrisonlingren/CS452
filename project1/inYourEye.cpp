@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "mpi.h" // message passing interface
 using namespace std;
@@ -21,6 +22,9 @@ int main (int argc, char * argv[]) {
 	char message[100];		// message itself
 	MPI_Status status;		// return status for receive
 
+	int alphabet[26];
+
+
 	// Start MPI
 	MPI_Init(&argc, &argv);
 
@@ -32,43 +36,38 @@ int main (int argc, char * argv[]) {
 
 	// THE REAL PROGRAM IS HERE
 
-  // 0. Non-parallel solution:
-  // double sum = 0;
-  // for (int i = 0; i < 300000; i++) {
-  //   sum += i;
-  // }
+	// create the dataset
+	// read text file here
+  ifstream inputf;
+  inputf.open("letters.txt");
 
-  // 1. know the problem
-  int n = 300000;
-  double sum = 0;
+  string letters;
+  inputf >> letters;
 
-  // 2. Break the problem down
-  int local_start = my_rank * (n / p);
-
-  // 3. Perform local work
-  double local_sum = 0;
-  for (int x = local_start; x < (local_start + n / p); x++) {
-    local_sum += x;
-  }
-
-  // 4. Combine local results back together again
-  // set overseer process to p0
-  if (my_rank != 0) {
-    MPI_Send(&local_sum, 1, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
-  } else {
-    sum = local_sum;
-    double temp;
-    for (int x = 1; x < p; x++) {
-      MPI_Recv(&temp, 1, MPI_DOUBLE, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
-      sum += temp;
+	if (my_rank == 0) {
+    for (int x = 0; x < 26; x++) {
+      alphabet[x] = 0;
     }
-  }
+	}
 
+	// divide the problem
+	int local_n = n/p;
+	string * local_a = new string[local_n];
+
+	MPI_Scatter(&letters[0], local_n, MPI_DOUBLE, local_a, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	// local work
+  int temp;
+
+	for (size_t x = 0; x < local_n; x++) {
+    temp = ((int) local_a[x]) - 97;
+    alphabet[temp]++;
+	}
 
 	// Shut down MPI
 	MPI_Finalize();
 
-  cout << sum << endl;
+  cout << "Max: " << the_max << ", Min: " << the_min << ", Avg: " << the_avg << endl;
 
 	return 0;
 }

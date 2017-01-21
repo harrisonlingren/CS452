@@ -24,7 +24,8 @@ int main (int argc, char * argv[]) {
 	int source;				// rank of the sender
 	int dest;				// rank of destination
 	int tag = 0;			// message number
-	char message[1000];		// message itself
+	char message1[200];
+	char message2[200];		// message itself
 	MPI_Status status;		// return status for receive
 
 	// Start MPI
@@ -39,13 +40,10 @@ int main (int argc, char * argv[]) {
 	// THE REAL PROGRAM IS HERE
 
   // set up ring message
-	char * ring_message = message;
-	sprintf(message, "Ring path: ");
-	if (my_rank % 2 == 0) {
-		sprintf(ring_message + strlen(ring_message), "rank: %d, ring: One Ring;", my_rank);
-	} else {
-		sprintf(ring_message + strlen(ring_message), "rank: %d, ring: Two Ring;", my_rank);
-	}
+	char* one_message = message1;
+	char* two_message = message2;
+	sprintf(message1, "One ring: ");
+	sprintf(message2, "Two ring: ");
 
   int lastEvenP;
 	int lastOddP;
@@ -58,45 +56,59 @@ int main (int argc, char * argv[]) {
 		lastOddP = p - 2;
 	}
 
-	//cout << "p: " << p << ", lastOddP: " << lastOddP << ", lastEvenP: " << lastEvenP << endl;
 
   if (my_rank == 0) {
-    MPI_Send(ring_message, strlen(ring_message) + 1, MPI_CHAR, 2, tag, MPI_COMM_WORLD);
-    cout << my_rank << " -> " << 2 << endl;
-    MPI_Recv(ring_message, 1000, MPI_CHAR, lastEvenP, tag, MPI_COMM_WORLD, &status);
+		sprintf(one_message + strlen(one_message), "%d, ", my_rank);
+    MPI_Send(one_message, strlen(one_message) + 1, MPI_CHAR, 2, tag, MPI_COMM_WORLD);
+    MPI_Recv(one_message, 200, MPI_CHAR, lastEvenP, tag, MPI_COMM_WORLD, &status);
+		sprintf(one_message + strlen(one_message), "0");
 
   } else if (my_rank == 1) {
-    MPI_Send(ring_message, strlen(ring_message) + 1, MPI_CHAR, lastOddP, tag, MPI_COMM_WORLD);
-    cout << my_rank << " -> " << lastOddP << endl;
-    MPI_Recv(ring_message, 1000, MPI_CHAR, 3, tag, MPI_COMM_WORLD, &status);
+		sprintf(two_message + strlen(two_message), "%d, ", my_rank);
+    MPI_Send(two_message, strlen(two_message) + 1, MPI_CHAR, lastOddP, tag, MPI_COMM_WORLD);
+    MPI_Recv(two_message, 200, MPI_CHAR, 3, tag, MPI_COMM_WORLD, &status);
+		sprintf(two_message + strlen(two_message), "1");
 
   } else if (my_rank == lastOddP) {
-    MPI_Recv(ring_message, 1000, MPI_CHAR, 1, tag, MPI_COMM_WORLD, &status);
-    cout << my_rank << " -> " << my_rank - 2 << endl;
-    sprintf(ring_message + strlen(ring_message), "rank: %d, ring: Two Ring;", my_rank);
-    MPI_Send(ring_message, strlen(ring_message) + 1, MPI_CHAR, (my_rank - 2), tag, MPI_COMM_WORLD);
+    MPI_Recv(two_message, 200, MPI_CHAR, 1, tag, MPI_COMM_WORLD, &status);
+		sprintf(two_message + strlen(two_message), "%d, ", my_rank);
+    MPI_Send(two_message, strlen(two_message) + 1, MPI_CHAR, (my_rank - 2), tag, MPI_COMM_WORLD);
 
   } else if (my_rank == lastEvenP) {
-    MPI_Recv(ring_message, 1000, MPI_CHAR, (lastEvenP - 2), tag, MPI_COMM_WORLD, &status);
-    cout << my_rank << " -> " << my_rank - 2 << endl;
-    sprintf(ring_message + strlen(ring_message), "rank: %d, ring: One Ring;", my_rank);
-    MPI_Send(ring_message, strlen(ring_message) + 1, MPI_CHAR, 0, tag, MPI_COMM_WORLD);
+    MPI_Recv(one_message, 200, MPI_CHAR, (lastEvenP - 2), tag, MPI_COMM_WORLD, &status);
+		sprintf(one_message + strlen(one_message), "%d, ", my_rank);
+    MPI_Send(one_message, strlen(one_message) + 1, MPI_CHAR, 0, tag, MPI_COMM_WORLD);
 
   } else if (my_rank % 2 == 0) {
-    MPI_Recv(ring_message, 1000, MPI_CHAR, (my_rank - 2), tag, MPI_COMM_WORLD, &status);
-    cout << my_rank << " -> " << my_rank + 2 << endl;
-    sprintf(ring_message + strlen(ring_message), "rank: %d, ring: One Ring;", my_rank);
-    MPI_Send(ring_message, strlen(ring_message) + 1, MPI_CHAR, (my_rank + 2), tag, MPI_COMM_WORLD);
+    MPI_Recv(one_message, 200, MPI_CHAR, (my_rank - 2), tag, MPI_COMM_WORLD, &status);
+		sprintf(one_message + strlen(one_message), "%d, ", my_rank);
+    MPI_Send(one_message, strlen(one_message) + 1, MPI_CHAR, (my_rank + 2), tag, MPI_COMM_WORLD);
 
   } else if (my_rank % 2 != 0) {
-    MPI_Recv(ring_message, 1000, MPI_CHAR, (my_rank + 2), tag, MPI_COMM_WORLD, &status);
-    cout << my_rank << " -> " << my_rank - 2 << endl;
-    sprintf(ring_message + strlen(ring_message), "rank: %d, ring: Two Ring;", my_rank);
-    MPI_Send(ring_message, strlen(ring_message) + 1, MPI_CHAR, (my_rank - 2), tag, MPI_COMM_WORLD);
+    MPI_Recv(two_message, 200, MPI_CHAR, (my_rank + 2), tag, MPI_COMM_WORLD, &status);
+		sprintf(two_message + strlen(two_message), "%d, ", my_rank);
+    MPI_Send(two_message, strlen(two_message) + 1, MPI_CHAR, (my_rank - 2), tag, MPI_COMM_WORLD);
   }
+
+	// if (my_rank % 2 == 0) {
+	// 	sprintf(one_message + strlen(one_message), "%d, ", my_rank);
+	// } else {
+	// 	sprintf(two_message + strlen(two_message), "%d, ", my_rank);
+	// }
+
+	if (my_rank == 0) {
+		cout << one_message << endl;
+	}
+
+	if (my_rank == 1) {
+		cout << two_message << endl;
+	}
 
 	// Shut down MPI
 	MPI_Finalize();
+	//
+	// cout << one_message << endl;
+	// cout << two_message << endl;
 
 	return 0;
 }
