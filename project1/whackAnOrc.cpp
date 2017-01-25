@@ -1,3 +1,9 @@
+/*
+  Harrison Lingren & Amy Street
+  CS 452 Project 1
+  2. Whack An Orc
+*/
+
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
