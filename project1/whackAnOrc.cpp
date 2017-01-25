@@ -40,7 +40,6 @@ int main (int argc, char * argv[]) {
 	// create the dataset
 	double a[20000];
   int n = 20000;
-	cout << "Size: " << n << endl;
 
 	if (my_rank == 0) {
 	  for (int x = 0; x < n; x++) {
@@ -77,8 +76,11 @@ int main (int argc, char * argv[]) {
 	// Shut down MPI
 	MPI_Finalize();
 
-	the_avg = the_avg / p;
-  cout << "Max: " << the_max << ", Min: " << the_min << ", Avg: " << the_avg << endl;
+	if (my_rank == 0) {
+		the_avg = the_avg / p;
+		cout << "Problem size: " << n << endl;
+  	cout << "Max: " << the_max << ", Min: " << the_min << ", Avg: " << the_avg << endl;
+	}
 
 	return 0;
 }

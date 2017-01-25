@@ -90,11 +90,6 @@ int main (int argc, char * argv[]) {
     MPI_Send(two_message, strlen(two_message) + 1, MPI_CHAR, (my_rank - 2), tag, MPI_COMM_WORLD);
   }
 
-	// if (my_rank % 2 == 0) {
-	// 	sprintf(one_message + strlen(one_message), "%d, ", my_rank);
-	// } else {
-	// 	sprintf(two_message + strlen(two_message), "%d, ", my_rank);
-	// }
 
 	if (my_rank == 0) {
 		cout << one_message << endl;
@@ -106,9 +101,6 @@ int main (int argc, char * argv[]) {
 
 	// Shut down MPI
 	MPI_Finalize();
-	//
-	// cout << one_message << endl;
-	// cout << two_message << endl;
 
 	return 0;
 }

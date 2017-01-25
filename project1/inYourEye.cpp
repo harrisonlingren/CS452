@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fstream>
 #include "mpi.h" // message passing interface
 using namespace std;
 
@@ -22,8 +23,6 @@ int main (int argc, char * argv[]) {
 	char message[100];		// message itself
 	MPI_Status status;		// return status for receive
 
-	int alphabet[26];
-
 
 	// Start MPI
 	MPI_Init(&argc, &argv);
@@ -38,36 +37,44 @@ int main (int argc, char * argv[]) {
 
 	// create the dataset
 	// read text file here
-  ifstream inputf;
-  inputf.open("letters.txt");
+  ifstream inputf("letters.txt");
 
   string letters;
   inputf >> letters;
 
+	int num_letters[26];
+
 	if (my_rank == 0) {
     for (int x = 0; x < 26; x++) {
-      alphabet[x] = 0;
+      num_letters[x] = 0;
     }
 	}
+
+	int n = 0;
+	n = sizeof(letters) / sizeof(letters[0]);
 
 	// divide the problem
 	int local_n = n/p;
 	string * local_a = new string[local_n];
 
-	MPI_Scatter(&letters[0], local_n, MPI_DOUBLE, local_a, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Scatter(&letters[0], local_n, MPI_DOUBLE, local_a, local_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	// local work
   int temp;
+	int local_num_letters[26];
 
 	for (size_t x = 0; x < local_n; x++) {
     temp = ((int) local_a[x]) - 97;
-    alphabet[temp]++;
+    local_num_letters[temp]++;
+	}
+
+	for (size_t x = 0; x < 26; x++) {
+		MPI_Allreduce(&local_num_letters[x], num_letters[x], 0, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 	}
 
 	// Shut down MPI
 	MPI_Finalize();
 
-  cout << "Max: " << the_max << ", Min: " << the_min << ", Avg: " << the_avg << endl;
 
 	return 0;
 }
