@@ -1,3 +1,9 @@
+/*
+  Harrison Lingren & Amy Street
+  CS 452 Project 1
+  3. In Your Eye
+*/
+
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,11 +22,11 @@ int main (int argc, char * argv[]) {
 
 	int my_rank;			// my CPU number for this process
 	int p;					// number of CPUs that we have
-	int source;				// rank of the sender
-	int dest;				// rank of destination
-	int tag = 0;			// message number
-	char message[100];		// message itself
-	MPI_Status status;		// return status for receive
+	//int source;				// rank of the sender
+	//int dest;				// rank of destination
+	//int tag = 0;			// message number
+	//char message[100];		// message itself
+	//MPI_Status status;		// return status for receive
 
 	// Start MPI
 	MPI_Init(&argc, &argv);
@@ -33,43 +39,38 @@ int main (int argc, char * argv[]) {
 
 	// THE REAL PROGRAM IS HERE
 
-	srand(123456);
-
-
+	int n = 1000;					// problem size
+	char letters[1000];		// char array of all problem data
+	int counts[256];	// int array to track amount of each letter
 
 	// create the dataset
-	int n = 1000;
-	char data[1000];
-
-	for (size_t i = 0; i < n; i++) {
-		char next = (char) (rand() % 26 + 97);
-		data[i] = next;
-	}
-
-	ofstream outputf("letters.txt");
-	if (!outputf) {
-		cout << "Can't open file" << endl;
-	} else {
-		outputf.write((char *) data, sizeof(data));
-		outputf.close();
-	}
-
-
-	// read text file here
-  ifstream inputf("letters.txt");
-
-  char letters[1000];
-  inputf >> letters;
-
-	int num_letters[26];
-
 	if (my_rank == 0) {
-    for (int x = 0; x < 26; x++) {
-      num_letters[x] = 0;
-    }
+
+		// create random data here
+		char data[1000];
+		srand(123456);
+		for (size_t i = 0; i < n; i++) {
+			char next = (char) (rand() % 26 + 97);
+			data[i] = next;
+		}
+
+		// write the data to a text file here
+		ofstream outputf("letters.txt");
+		if (!outputf) {
+			cout << "Can't open file" << endl;
+		} else {
+			outputf.write((char *) data, sizeof(data));
+			outputf.close();
+		}
+
+		// read the text file here
+	  ifstream inputf("letters.txt");
+	  inputf >> letters;
+
+		for (int x = 0; x < 26; x++) {
+			counts[x] = 0;
+		}
 	}
-
-
 
 	// divide the problem
 	int local_n = n/p;
@@ -81,20 +82,30 @@ int main (int argc, char * argv[]) {
 
 	// local work
   int temp;
-	int local_num_letters[26];
+	int local_counts[256];
 
-	for (size_t x = 0; x < local_n; x++) {
-    temp = ((int) local_a[x]) - 97;
-    local_num_letters[temp]++;
+	for (size_t x = 0; x < 256; x++) {
+		local_counts[x] = 0;
 	}
 
-	MPI_Reduce(&local_num_letters, &num_letters, 26, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+	if (my_rank == 2) {cout << "my_rank: " << my_rank << " | chars: \n";}
+	for (size_t x = 0; x < local_n; x++) {
+		if (my_rank == 2) {cout << local_a[x];}
+		temp = ((int) local_a[x]);
+		if ( temp > 96 && temp < 123 ) {
+			local_counts[temp]++;
+		}
+	}
+	cout << endl;
 
+	//MPI_Reduce(&local_counts, &counts, 256, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
+	for (size_t x = 0; x < 256; x++) {
+		MPI_Allreduce(&local_counts[x], &counts[x], 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+	}
 
 	// Shut down MPI
 	MPI_Finalize();
-
 
 	return 0;
 }
