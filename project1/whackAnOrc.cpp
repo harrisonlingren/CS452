@@ -48,7 +48,7 @@ int main (int argc, char * argv[]) {
 	int n = 20000;
 
 	if (my_rank == 0) {
-		for (int x = 0; x < n; x++) {
+		for (size_t x = 0; x < n; x++) {
 			a[x] = rand() % 100;
 		}
 	}

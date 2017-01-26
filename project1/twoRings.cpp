@@ -1,7 +1,7 @@
 /*
   Harrison Lingren & Amy Street
   CS 452 Project 1
-  1. Two runnings
+  1. Two rings
 */
 
 #include <iostream>
