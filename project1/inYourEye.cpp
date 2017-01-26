@@ -1,7 +1,7 @@
 /*
-  Harrison Lingren & Amy Street
-  CS 452 Project 1
-  3. In Your Eye
+	Harrison Lingren & Amy Street
+	CS 452 Project 1
+	3. In Your Eye
 */
 
 #include <iostream>
@@ -18,7 +18,7 @@ using namespace std;
 // mpicxx -o blah file.cpp
 // mpirun -np 32 blah
 
-int main (int argc, char * argv[]) {
+	int main (int argc, char * argv[]) {
 
 	int my_rank;			// my CPU number for this process
 	int p;					// number of CPUs that we have
@@ -64,8 +64,8 @@ int main (int argc, char * argv[]) {
 		}
 
 		// read the text file here
-	  ifstream inputf("letters.txt");
-	  inputf >> letters;
+		ifstream inputf("letters.txt");
+		inputf >> letters;
 
 		for (int x = 0; x < 26; x++) {
 			counts[x] = 0;
@@ -81,7 +81,7 @@ int main (int argc, char * argv[]) {
 
 
 	// local work
-  int temp;
+	int temp;
 	int local_counts[256];
 
 	for (size_t x = 0; x < 256; x++) {

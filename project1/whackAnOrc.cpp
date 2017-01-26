@@ -28,7 +28,7 @@ int main (int argc, char * argv[]) {
 	char message[100];		// message itself
 	MPI_Status status;		// return status for receive
 
-  srand(1251);
+	srand(1251);
 
 	double the_max = 0; double the_min = 0; double the_avg = 0;
 
@@ -45,12 +45,12 @@ int main (int argc, char * argv[]) {
 
 	// create the dataset
 	double a[20000];
-  int n = 20000;
+	int n = 20000;
 
 	if (my_rank == 0) {
-	  for (int x = 0; x < n; x++) {
-	    a[x] = rand() % 100;
-	  }
+		for (int x = 0; x < n; x++) {
+			a[x] = rand() % 100;
+		}
 	}
 
 	// divide the problem
@@ -85,7 +85,7 @@ int main (int argc, char * argv[]) {
 	if (my_rank == 0) {
 		the_avg = the_avg / p;
 		cout << "Problem size: " << n << endl;
-  	cout << "Max: " << the_max << ", Min: " << the_min << ", Avg: " << the_avg << endl;
+		cout << "Max: " << the_max << ", Min: " << the_min << ", Avg: " << the_avg << endl;
 	}
 
 	return 0;
