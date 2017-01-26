@@ -1,7 +1,6 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <fstream>
 #include "mpi.h" // message passing interface
 using namespace std;
@@ -23,7 +22,6 @@ int main (int argc, char * argv[]) {
 	char message[100];		// message itself
 	MPI_Status status;		// return status for receive
 
-
 	// Start MPI
 	MPI_Init(&argc, &argv);
 
@@ -35,11 +33,32 @@ int main (int argc, char * argv[]) {
 
 	// THE REAL PROGRAM IS HERE
 
+	srand(123456);
+
+
+
 	// create the dataset
+	int n = 1000;
+	char data[1000];
+
+	for (size_t i = 0; i < n; i++) {
+		char next = (char) (rand() % 26 + 97);
+		data[i] = next;
+	}
+
+	ofstream outputf("letters.txt");
+	if (!outputf) {
+		cout << "Can't open file" << endl;
+	} else {
+		outputf.write((char *) data, sizeof(data));
+		outputf.close();
+	}
+
+
 	// read text file here
   ifstream inputf("letters.txt");
 
-  string letters;
+  char letters[1000];
   inputf >> letters;
 
 	int num_letters[26];
@@ -50,14 +69,15 @@ int main (int argc, char * argv[]) {
     }
 	}
 
-	int n = 0;
-	n = sizeof(letters) / sizeof(letters[0]);
+
 
 	// divide the problem
 	int local_n = n/p;
-	string * local_a = new string[local_n];
+	char * local_a = new char[local_n];
 
 	MPI_Scatter(&letters[0], local_n, MPI_DOUBLE, local_a, local_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+
 
 	// local work
   int temp;
@@ -68,9 +88,9 @@ int main (int argc, char * argv[]) {
     local_num_letters[temp]++;
 	}
 
-	for (size_t x = 0; x < 26; x++) {
-		MPI_Allreduce(&local_num_letters[x], num_letters[x], 0, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-	}
+	MPI_Reduce(&local_num_letters, &num_letters, 26, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+
 
 	// Shut down MPI
 	MPI_Finalize();
