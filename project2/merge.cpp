@@ -47,31 +47,31 @@ void mergeSort(int arr[], int l, int r) {
 }
 
 void printA(int A[], int n) {
-  cout << endl;
-  for (int i = 0; i < n-1; i++) {
-    cout << A[i] << ", ";
-  } cout << A[n-1];
-  cout << endl;
+    cout << endl;
+    for (int i = 0; i < n-1; i++) {
+        cout << A[i] << ", ";
+    } cout << A[n-1];
+    cout << endl;
 }
 
 int main(int argc, char const *argv[]) {
-  srand(time(0));
+    srand(time(0));
 
-  cout << "Please input size of array to sort" << endl << ">  ";
-  int size; cin >> size;
-  int * A = new int[size];
+    cout << "Please input size of array to sort" << endl << ">  ";
+    int size; cin >> size;
+    int * A = new int[size];
 
-  for (int i = 0; i < size; i++) {
-    A[i] = (rand() % 1000000);
-  }
+    for (int i = 0; i < size; i++) {
+        A[i] = (rand() % 1000000);
+    }
 
-  cout << "Initial array:";
-  printA(A, size);
+    cout << "Initial array:";
+    printA(A, size);
 
-  mergeSort(A, 0, size - 1);
+    mergeSort(A, 0, size - 1);
 
-  cout << endl << "Sorted array:";
-  printA(A, size);
+    cout << endl << "Sorted array:";
+    printA(A, size);
 
-  return 0;
+    return 0;
 }
