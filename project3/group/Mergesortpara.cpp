@@ -91,11 +91,11 @@ int main (int argc, char * argv[]) {
   // print srank arrays after reduction
   if (my_rank == 0) {
     for (int x = 0; x< 32; x++) {
-      cout<< r[x] <<" Rank " << totalsrankA[x] << endl;
+      cout << R[x] <<" Rank " << totalsrankA[x] << endl;
     }
 
     for (int x = 0; x < 32; x++){
-      cout<< l[x] <<" Rank " << totalsrankB[x] << endl;
+      cout << L[x] <<" Rank " << totalsrankB[x] << endl;
     }
   }
 
@@ -120,8 +120,8 @@ int main (int argc, char * argv[]) {
   */
 
   // Mergesort the left and right to sort
-   mergesort(l, 0, (n/2)-1);
-   mergesort(r, 0, (n/2)-1);
+   mergesort(L, 0, (n/2)-1);
+   mergesort(R, 0, (n/2)-1);
 
   // Create a dummy array to hold ranks of A and B and fill them
   // WE MOVED CODE FROM HERE
