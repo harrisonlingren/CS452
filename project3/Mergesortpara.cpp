@@ -43,14 +43,12 @@ int main (int argc, char * argv[]) {
     for (int x = 0; x < n; x++) {
        in >> a[x] ;
     }
+    
+    /* for (int x = 0; x < n; x++) {  // print array A in process 0
+      cout << a[i] << endl;
+    } */
   }
-
-  if (my_rank == 0) {                // print array A in process 0
-    for (int i=0; i<n;i++){
-    //  cout << a[i] << endl;
-    }
-  }
-
+  
   // bcast the entire array A to all processors
   MPI_Bcast(&a[0] , n , MPI_INT ,0 ,MPI_COMM_WORLD);
 
@@ -67,8 +65,8 @@ int main (int argc, char * argv[]) {
 
   int local_start = my_rank;
   for (int x = local_start; x < n/2; x = x +(p * logOfHalf) ) {
-    srankA[x] = Rank(r[b], 32, L);      // R[x] in L and R[x] in R
-    srankB[x] = Rank(l[b], 32, R);      // L[x] in R and R[x] in L
+    srankA[x] = Rank(R[x], 32, L);      // R[x] in L and R[x] in R
+    srankB[x] = Rank(L[x], 32, R);      // L[x] in R and R[x] in L
 
     /*
     for (int x = local_start; x < ((n/2) / logOfHalf); x += p){
@@ -120,8 +118,8 @@ int main (int argc, char * argv[]) {
   */
 
   // Mergesort the left and right to sort
-   mergesort(L, 0, (n/2)-1);
-   mergesort(R, 0, (n/2)-1);
+   mergesort(L, 0, (n/2) - 1);
+   mergesort(R, 0, (n/2) - 1);
 
   // Create a dummy array to hold ranks of A and B and fill them
   // WE MOVED CODE FROM HERE
@@ -132,7 +130,6 @@ int main (int argc, char * argv[]) {
   }*/
 
   in.close();
-
   MPI_Finalize();
 }
 
@@ -155,7 +152,7 @@ int Rank(int searchItem, int size, int * array) {
   } else {
     // we must go deeper!
     if (searchItem < array[size/2]) {
-      return Rank(searchItem,size/2,array);
+      return Rank(searchItem, (size/2) ,array);
 
     // we're just about finished...
     } else {
@@ -168,11 +165,11 @@ int Rank(int searchItem, int size, int * array) {
 void mergesort(int * a, int first, int last) {
   int mid;
   if (first < last) {
-    mid=(first+last)/2;
+    mid = ((first + last) / 2);
 
-    mergesort(a,first,mid);
-    mergesort(a,mid+1,last);
-    merge(a,first,last,mid); // This is where Pmerge goes
+    mergesort(a, first, mid);
+    mergesort(a, (mid+1), last);
+    merge(a, first, last, mid); // This is where Pmerge goes
 
   } return;
 }
@@ -186,25 +183,21 @@ void merge(int * a, int first, int last, int mid) {
   while (i <= mid && j <= last) {
     if (a[i] < a[j]) {
       c[k] = a[i];
-      k++;
-      i++;
+      k++; i++;
     } else {
       c[k] = a[j];
-      k++;
-      j++;
+      k++; j++;
     }
   }
 
   while (i <= mid) {
     c[k] = a[i];
-    k++;
-    i++;
+    k++; i++;
   }
 
   while (j <= last) {
     c[k] = a[j];
-    k++;
-    j++;
+    k++; j++;
   }
 
   for (i = first; i < k; i++) {
