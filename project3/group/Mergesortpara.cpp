@@ -6,9 +6,9 @@
 #include <mpi.h>
 using namespace std;
 
-int Rank(int,int,int*);
-void merge(int * a,int first, int last , int mid );
-void mergesort(int * a, int first, int last);
+int Rank(int, int, int*);
+void merge(int*,int, int, int);
+void mergesort(int*, int, int);
 int log2(int);
 
 int main (int argc, char * argv[]) {
@@ -46,7 +46,7 @@ int main (int argc, char * argv[]) {
   }
 
   if (my_rank == 0) {                // print array A in process 0
-    for(int i=0; i<n;i++){
+    for (int i=0; i<n;i++){
     //  cout << a[i] << endl;
     }
   }
@@ -66,32 +66,35 @@ int main (int argc, char * argv[]) {
   int logOfHalf = log2(n/2);
 
   int local_start = my_rank;
-  for( int b=local_start; b < n/2; b = b +(p * logOfHalf) ) {
-    srankA[b]= Rank(r[b],32,l);      // r[b] in L and l[b] in R
-    srankB[b]= Rank(l[b],32,r);      // r[m] in R and l[m] in L
+  for (int x = local_start; x < n/2; x = x +(p * logOfHalf) ) {
+    srankA[x] = Rank(r[b], 32, L);      // R[x] in L and R[x] in R
+    srankB[x] = Rank(l[b], 32, R);      // L[x] in R and R[x] in L
 
-    /* for(int d =local_start;d < ((n/2) / logOfHalf); d+=p){
-    cout<< L[d] <<" Rank " << srankB[d] << endl;
-    } cout<<endl;
-    for(int d =local_start;d < ((n/2) / logOfHalf); d+=p){
-      cout<< R[d] <<" Rank " << srankA[d] << endl;
-    } */
+    /*
+    for (int x = local_start; x < ((n/2) / logOfHalf); x += p){
+      cout<< L[x] <<" Rank " << srankB[d] << endl;
+    } cout << endl;
+
+    for (int x = local_start; x < ((n/2) / logOfHalf); x += p){
+      cout<< R[x] <<" Rank " << srankA[x] << endl;
+    }
+    */
   }
 
   // create arrays for reduction
   int totalsrankA[32];
   int totalsrankB[32];
 
-  MPI_Allreduce(&srankA,&totalsrankA,32,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
-  MPI_Allreduce(&srankB,&totalsrankB,32,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+  MPI_Allreduce(&srankA, &totalsrankA, 32, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&srankB, &totalsrankB, 32, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
   // print srank arrays after reduction
   if (my_rank == 0) {
-    for(int x = 0; x< 32; x++) {
+    for (int x = 0; x< 32; x++) {
       cout<< r[x] <<" Rank " << totalsrankA[x] << endl;
     }
 
-    for(int x = 0; x < 32; x++){
+    for (int x = 0; x < 32; x++){
       cout<< l[x] <<" Rank " << totalsrankB[x] << endl;
     }
   }
@@ -99,20 +102,20 @@ int main (int argc, char * argv[]) {
   /*
   // check to see if array A is in process 1
   if (my_rank == 1) {
-    for(int z=0; z < n;z++){
-      cout << a[z] << endl;
+    for (int x = 0; x < n; x++){
+      cout << a[x] << endl;
     }
   }
 
   //  print out alias commented out once you verify they are correct
   cout<< "array A"<< endl;
-  for (int z = 0; z < n/2; z++) {
-    cout<<l[z]<< endl;
+  for (int x = 0; x < n/2; x++) {
+    cout << L[x] << endl;
   }
 
-  cout << endl; << "array B"<<endl;
-  for (int k = 0; k < n/2; k++) {
-    cout << r[k] << endl;
+  cout << endl; << "array B" << endl;
+  for (int x = 0; x < n/2; x++) {
+    cout << R[x] << endl;
   }
   */
 
