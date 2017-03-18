@@ -7,8 +7,8 @@
 using namespace std;
 
 int Rank(int, int, int*);
-void merge(int*,int, int, int);
-void mergesort(int*, int, int);
+void mergesort(int*, int*, int, int, int, int, int);
+void pmerge(int*, int*, int*, int, int, int);
 int log2(int);
 
 int main (int argc, char * argv[]) {
@@ -37,101 +37,116 @@ int main (int argc, char * argv[]) {
 
   int n;                              // problem size
   in >> n;                            // read first line for length of letters in the list of random letters
-  int * a = new int [n];              // creates an array that will hold all the random letters
+  int * a = new int [n];  
+  int * b = new int[n];               // creates an array that will hold all the random letters
 
+  
+  
+  
+  
+  
   if (my_rank == 0) {                 // if you are process 0 then go down the list in the file and add them to the array.
     for (int x = 0; x < n; x++) {
        in >> a[x] ;
+	   b[x]= 0;
     }
     
-    /* for (int x = 0; x < n; x++) {  // print array A in process 0
-      cout << a[i] << endl;
-    } */
+	// bcast the entire array A to all processors
+	MPI_Bcast(&a[0] , n , MPI_INT ,0 ,MPI_COMM_WORLD);
+	
+ 
   }
   
-  // bcast the entire array A to all processors
-  MPI_Bcast(&a[0] , n , MPI_INT ,0 ,MPI_COMM_WORLD);
+ 
 
-  // create left and right arrays for array A
-  int *L;
-  int *R;
-  L = new int[32];   L = &a[0];
-  R = new int [32];  R = &a[32];
+  mergesort(&a[0], &b[0], 0, n-1, n, my_rank, p);
 
-  int srankA[32]= {0};
-  int srankB[32]= {0};
 
-  int logOfHalf = log2(n/2);
 
-  int local_start = my_rank;
-  for (int x = local_start; x < n/2; x = x +(p * logOfHalf) ) {
-    srankA[x] = Rank(R[x], 32, L);      // R[x] in L and R[x] in R
-    srankB[x] = Rank(L[x], 32, R);      // L[x] in R and R[x] in L
-
-    /*
-    for (int x = local_start; x < ((n/2) / logOfHalf); x += p){
-      cout<< L[x] <<" Rank " << srankB[d] << endl;
-    } cout << endl;
-
-    for (int x = local_start; x < ((n/2) / logOfHalf); x += p){
-      cout<< R[x] <<" Rank " << srankA[x] << endl;
-    }
-    */
-  }
-
-  // create arrays for reduction
-  int totalsrankA[32];
-  int totalsrankB[32];
-
-  MPI_Allreduce(&srankA, &totalsrankA, 32, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-  MPI_Allreduce(&srankB, &totalsrankB, 32, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-  // print srank arrays after reduction
-  if (my_rank == 0) {
-    for (int x = 0; x< 32; x++) {
-      cout << R[x] <<" Rank " << totalsrankA[x] << endl;
-    }
-
-    for (int x = 0; x < 32; x++){
-      cout << L[x] <<" Rank " << totalsrankB[x] << endl;
-    }
-  }
-
-  /*
-  // check to see if array A is in process 1
-  if (my_rank == 1) {
-    for (int x = 0; x < n; x++){
-      cout << a[x] << endl;
-    }
-  }
-
-  //  print out alias commented out once you verify they are correct
-  cout<< "array A"<< endl;
-  for (int x = 0; x < n/2; x++) {
-    cout << L[x] << endl;
-  }
-
-  cout << endl; << "array B" << endl;
-  for (int x = 0; x < n/2; x++) {
-    cout << R[x] << endl;
-  }
-  */
-
-  // Mergesort the left and right to sort
-   mergesort(L, 0, (n/2) - 1);
-   mergesort(R, 0, (n/2) - 1);
-
-  // Create a dummy array to hold ranks of A and B and fill them
-  // WE MOVED CODE FROM HERE
-
-  /*  // print array A in process 0
-  for (int i=0; i<n; i++) {
-    cout << A[i] << endl;
-  }*/
-
+  
   in.close();
   MPI_Finalize();
 }
+
+
+
+// sequential mergesort call
+void mergesort(int * input, int * output, int first, int last, int size, int my_rank, int p) {
+	int mid;
+	int * rankArray= new int[size];
+	for(int x=0;x<size;x++){
+		rankArray[x]=0;
+	}
+	
+  if (first < last) {
+    mid= first+((last-first)/2);
+    mergesort(&input[0],&rankArray[0], first, mid,size,my_rank,p);
+    mergesort(&input[size/2],&rankArray[size/2], mid+1 , last, size, my_rank,p);
+    pmerge(&rankArray[0],&rankArray[size/2],&output[0],size,my_rank,p); // This is where Pmerge goes
+
+  } return;
+}
+
+
+void pmerge(int * L , int * R , int * sortedArray, int n, int my_rank, int p) 
+{
+  int logOfHalf = log2(n/2);
+  int sub_size= ceil((n/2)/(logOfHalf));
+  int local_start = my_rank;    // striping
+  
+
+  int * srankA= new int[sub_size];
+  int * srankB= new int[sub_size]; 
+  int * totalsrankA = new int[sub_size]; 
+  int * totalsrankB = new int[sub_size]; 
+ 
+for (int i =0;i<sub_size;i++){
+	
+	srankA[i]= 0;
+	srankB[i]= 0; 
+	totalsrankA[i]= 0; 
+	totalsrankB[i] = 0; 	
+}
+  
+   
+	int counter = 0;
+	int posA; int posB;
+	for (int x = local_start; x < sub_size; x+=p) {
+	  // srankA: Find position of R to search for its Rank within L
+	  posA = 1+x*logOfHalf;
+	  srankA[counter] = Rank(R[posA], n/2, L);      // R[x] in L and R[x] in R
+
+	  // srankB: Find position of L to search for its Rank within R
+	  posB = 1+x*logOfHalf;
+	  srankB[counter] = Rank(L[posB], n/2, R);      // L[x] in R and R[x] in L
+	  counter++;
+	}
+
+
+  
+ 
+  MPI_Allreduce(&srankA, &totalsrankA, sub_size, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&srankB, &totalsrankB, sub_size, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+  // print srank arrays after reduction
+  if (my_rank == 0) {
+	cout << "this is the right array" << endl;
+    for (int x = 0; x < sub_size; x++) {
+      cout << R[x*logOfHalf] <<" Rank ";
+	  cout << totalsrankA[x] << endl;
+    }
+	cout << endl;
+	cout << "this is the left array" << endl;
+    for (int x = 0; x < sub_size; x++){
+      cout << L[x*logOfHalf] <<" Rank ";
+      cout << totalsrankB[x] << endl;
+    }
+  }
+
+  
+}
+
+
 
 
 // returns log base 2 of x
@@ -161,18 +176,7 @@ int Rank(int searchItem, int size, int * array) {
   }
 }
 
-// sequential mergesort call
-void mergesort(int * a, int first, int last) {
-  int mid;
-  if (first < last) {
-    mid = ((first + last) / 2);
 
-    mergesort(a, first, mid);
-    mergesort(a, (mid+1), last);
-    merge(a, first, last, mid); // This is where Pmerge goes
-
-  } return;
-}
 
 //recursive merge function
 void merge(int * a, int first, int last, int mid) {
@@ -204,3 +208,4 @@ void merge(int * a, int first, int last, int mid) {
     a[i] = c[i];
   }
 }
+	
