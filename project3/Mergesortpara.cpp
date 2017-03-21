@@ -6,12 +6,17 @@
 #include <mpi.h>
 using namespace std;
 
-int Rank(int, int, int*);
-void mergesort(int*, int*, int, int, int, int, int);
-void pmerge(int*, int*, int*, int, int, int);
+
+
+void mergesort(int *, int , int );
+void merge(int *, int , int , int );
+int Rank(int, int , int *);
 int log2(int);
+void pmerge(int *,int*, int , int , int,int,int,int );
+
 
 int main (int argc, char * argv[]) {
+
   int my_rank;        // my CPU number for this process
   int p;              // number of CPUs that we have
   int source;         // rank of the sender
@@ -29,165 +34,255 @@ int main (int argc, char * argv[]) {
   MPI_Comm_size(MPI_COMM_WORLD, &p);
 
 
-
   /* PROGRAM STARTS HERE */
+
   ifstream in;                        // if stream to start pulling in file
   in.open("mergepara.txt");
 
   int n;                              // problem size
-  in  >> n;
-  // read first line for length of letters in the list of random letters
-  int * a = new int [n];
-  int * b = new int[n];               // creates an array that will hold all the random letters
+  in  >> n;                                             // read first line for l                                                                                                                     ength of letters in the list of random letters
 
-  if (my_rank == 0) {                 // if you are process 0 then go down the list in the file and add them to the array.
-    for (int x = 0; x < n; x++) {
-       in >> a[x] ;
-     b[x]= 0;
+  int * a = new int [n];                        // creates an array that will ho                                                                                                                     ld all the random letters
 
-     cout << "a[" << x << "]: " << a[x] << ", b[" << x << "]: " << b[x] << endl;
+
+
+    if (my_rank == 0) {                 // if you are process 0 then go down the l                                                                                                                     ist in the file and add them to the array.
+        for (int x = 0; x < n; x++) {
+            in >> a[x] ;
+        }
+
+
+
+        /* if (my_rank == 0) {
+                cout << " This is processor 0 array A"<<endl;     // Uncomment if need                                                                                                                      to test array is in A
+                for (int x=0; x<n; x++) {
+                        cout << a[x]<< endl;
+                    }
+            cout<<endl;
+        } */
     }
+
+
 
     // bcast the entire array A to all processors
     MPI_Bcast(&a[0], n, MPI_INT, 0, MPI_COMM_WORLD);
-  }
 
-  if (my_rank == 1) {
-    for (int x = 0; x < n; x++) {cout << "a[" << x << "]: " << a[x] << endl;}
-  }
 
-  mergesort(&a[0], &b[0], 0, n - 1, n, my_rank, p);
+
+
+  /* if (my_rank == 1) {
+          cout<< endl;
+          cout << " This is processor 1 array A"<<endl;                 // Uncom                                                                                                                     ment if needed to test bcast
+          for (int x=0; x<n; x++) {
+                  cout << a[x] << endl;
+                }
+  }
+  */
+
+
+    int *L;
+    int *R;
+    L = new int[32];
+    R= new int [32];
+
+    L = &a[0];
+    R= &a[32];
+
+    mergesort(L, 0, (n/2)-1);   // works  will look at later ***************                                                                                                                     *********************************************
+    mergesort(R, 0, (n/2)-1);  // These 2 sort the array for us thats all I                                                                                                                      wanted out of them
+    pmerge(L,R,0,n-1,n/2,n,my_rank,p);
+
+    //mergesort(&a[0],0,n-1);   // does not work segmetation fault
+    /*
+        if (my_rank == 0){
+
+        cout<< "This is the sorted array"<<endl;         // Use to test if L and                                                                                                                      R went though
+                for (int x=0; x<n/2; x++) {
+                        cout << L[x] << endl;
+                }
+    } */
+
+
+
+
 
   in.close();
   MPI_Finalize();
 }
 
-// sequential mergesort call
-void mergesort(int * input, int * output, int first, int last, int size, int my_rank, int p) {
-  int mid;
-  int * rankArray = new int[size];
-  for(int x = 0; x < size; x++){
-    rankArray[x] = 0;
-  }
 
-  if (first < last) {
-    mid = first + ((last - first) / 2);
-    mergesort(&input[0], &rankArray[0], first, mid, size, my_rank, p);
-    mergesort(&input[size / 2], &rankArray[size / 2], mid + 1 , last, size, my_rank, p);
-    pmerge(&rankArray[0], &rankArray[size / 2], &output[0], size, my_rank, p);
-  } return;
+void pmerge(int * L,int * R, int first, int last, int mid,int size,int my_rank,int p){
+    int logOfHalf = log2(size/2);
+    int local_start= my_rank;
+    int partition = ceil((double(size/2)/(logOfHalf)));
+
+    int *srankA= new int[partition];
+    int *srankB= new int[partition];
+    int *totalsrankA= new int[partition];
+    int *totalsrankB= new int[partition];
+
+    //cout<< " This is the value of partition"<< partition << endl;      //                                                                                                                      uncomment if need to test partiton value
+
+    for (int i =0;i < partition;i++){
+
+            srankA[i]= 0;
+            srankB[i]= 0;
+            totalsrankA[i]=0;
+            totalsrankB[i]=0;
+
+    }
+
+    /*
+    if(my_rank==0){
+    cout<< "this is srankA"<<endl;
+            for (int i =0;i<partition;i++){
+
+            cout<< srankA[i]<<endl;
+            }
+    } */
+
+
+
+
+    for (int x = local_start; x < partition; x+=p) {
+            srankA[x] = Rank(R[x*logOfHalf], size/2, L);
+            srankB[x] =     Rank(L[x*logOfHalf], size/2, R);
+
+    }
+
+
+    /* if (my_rank == 3) {
+    cout << "this is the processor 3's array A" << endl;            // Uncom                                                                                                                     ment to see what values should be in each processor
+            for (int x = 0; x < partition; x++) {
+            cout << srankA[x] << endl;
+
+            }
+
+    } */
+
+    MPI_Allreduce(srankA, totalsrankA, partition, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(srankB, totalsrankB, partition, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+
+    if (my_rank == 0) {
+        cout << "This is the ending array A" << endl;
+        for (int x = 0; x < partition; x++) {
+            cout << totalsrankA[x] <<" "<< x<< endl;
+
+        }
+
+    }
+
+    if (my_rank == 0) {
+        cout << "This is the ending array B" << endl;
+        for (int x = 0; x < partition; x++) {
+            cout << totalsrankB[x] <<" "<< x << endl;
+        }
+    }
+    cout<<endl;
+    int * endpointA = new int[2*partition];
+    int * endpointB = new int[2*partition];
+
+    for (int x = 0; x < partition; x++) {
+        endpointA[x] = totalsrankB[x] * logOfHalf; 
+        endpointB[x] = totalsrankA[x] * logOfHalf;
+    }
+
+    for (int x = 0; x < partition; x++) {
+        endpointA[partition + x] = totalsrankA[x]; 
+        endpointB[partition + x] = totalsrankB[x];
+    }
+
+    sort(endpointA, endpointA + 2 * partition);
+    sort(endpointB, endpointB + 2 * partition);
+
+    for (int x = 0; x < 2* partition; x++) {
+        cout << "end A[" << x << "]: " << endpointA[x] << ", end B[" << x << "]: " << endpointB[x] << endl;
+    }
 }
 
-void pmerge(int * L , int * R , int * sortedArray, int n, int my_rank, int p) {
-  //cout << "This is totally working...?" << endl;
-  int logOfHalf = log2(n / 2);
-  int sub_size= ceil((n / 2) / (logOfHalf));
-  int local_start = my_rank;    // striping
 
-  int * srankA= new int[n / 2];
-  int * srankB= new int[n / 2];
-  int * totalsrankA = new int[n / 2];
-  int * totalsrankB = new int[n / 2];
 
-  for (int i = 0; i < n / 2; i++) {
-    srankA[i] = 0;
-    srankB[i] = 0;
-    totalsrankA[i] = 0;
-    totalsrankB[i] = 0;
-  }
 
-  int counter = local_start; int posA; int posB;
-  for (int x = local_start; x < sub_size; x += p) {
-    counter = counter + x * logOfHalf;
-
-    // srankA: Find position of R to search for its Rank within L
-    posA = x * logOfHalf;
-    srankA[x] = Rank(R[posA], n / 2, L);      // R[x] in L and R[x] in R
-
-    // srankB: Find position of L to search for its Rank within R
-    posB = x * logOfHalf;
-    srankB[x] = Rank(L[posB], n / 2, R);      // L[x] in R and R[x] in L
-  }
-
-  /* //if (my_rank=0) {
-    cout << endl;
-    for(int x = 0; x < n/2; x++) {
-      cout << "my_rank: " << my_rank << ", srankA["<<x<<"]: " << srankA[x] << endl;
-    }
-  //} */
-
-  MPI_Allreduce(&srankA, &totalsrankA, n/2, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-  MPI_Allreduce(&srankB, &totalsrankB, n/2, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-  // print srank arrays after reduction
-  if (my_rank == 0) {
-    cout << "this is the right array" << endl;
-    for (int x = 0; x < sub_size; x++) {
-      //cout << R[x] <<" Rank ";
-      cout << totalsrankA[x] << endl;
-    }
-    cout << endl;
-    cout << "this is the left array" << endl;
-    for (int x = 0; x < sub_size; x++) {
-      //cout << L[x*logOfHalf] <<" Rank ";
-      cout << totalsrankB[x] << endl;
-    }
-  }
-}
 
 // returns log base 2 of x
 int log2(int x) {
-  return ( log(x) / log(2) );
+   return (log(x) / log(2) );
 }
 
-// recursive Rank function (binary search)
-// returns the rank for any given index on an array
-int Rank(int searchItem, int size, int * array) {
-  // base case
-  if (size == 1){
-    // checks midpoint, returns either 0 or 1 if in 1st or 2nd half
-    if (searchItem < array[0]) { return 0; }
-    else { return 1; }
+void mergesort(int * a, int first, int last)
+{
 
-  } else {
-    // we must go deeper!
-    if (searchItem < array[size / 2]) {
-      return Rank(searchItem, (size / 2), array);
-
-    // we're just about finished...
-    } else {
-      return size / 2 + Rank(searchItem, (size / 2), &array[size / 2]);
+    int mid;
+    if (first < last)
+    {
+        mid= first+((last-first)/2);
+        mergesort(a,first,mid);
+        mergesort(a,mid+1,last);
+        merge(a,first,last,mid);
     }
-  }
+    return;
+
+}
+void merge(int * a, int first, int last, int mid)
+{
+    int i, j, k, c[50];
+    i = first;
+    k = first;
+    j = mid + 1;
+    while (i <= mid && j <= last)
+    {
+        if (a[i] < a[j])
+        {
+            c[k] = a[i];
+            k++;
+            i++;
+        }
+        else
+        {
+            c[k] = a[j];
+            k++;
+            j++;
+        }
+    }
+    while (i <= mid)
+    {
+        c[k] = a[i];
+        k++;
+        i++;
+    }
+    while (j <= last)
+    {
+        c[k] = a[j];
+        k++;
+        j++;
+    }
+    for (i = first; i < k; i++)
+    {
+        a[i] = c[i];
+    }
 }
 
-// recursive merge function
-void merge(int * a, int first, int last, int mid) {
-  int i, j, k, c[50];
-  i = first;
-  k = first;
-  j = mid + 1;
-  while (i <= mid && j <= last) {
-    if (a[i] < a[j]) {
-      c[k] = a[i];
-      k++; i++;
-    } else {
-      c[k] = a[j];
-      k++; j++;
+int Rank(int value, int size, int * array)
+{
+
+    if(size == 1){
+            if(value < array[0]){
+
+                    return 0;
+            }
+            else{
+                    return 1;
+            }
+
     }
-  }
+    else{
+        if(value < array[size/2]){
+                return Rank(value,size/2,array) ;
+        }
+        else{
+                return size/2 + Rank(value, size/2,&array[size/2]) ;
 
-  while (i <= mid) {
-    c[k] = a[i];
-    k++; i++;
-  }
-
-  while (j <= last) {
-    c[k] = a[j];
-    k++; j++;
-  }
-
-  for (i = first; i < k; i++) {
-    a[i] = c[i];
-  }
+        }
+    }
 }
