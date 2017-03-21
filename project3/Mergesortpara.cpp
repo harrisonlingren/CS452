@@ -196,8 +196,10 @@ void pmerge(int * L,int * R, int first, int last, int mid,int size,int my_rank,i
     sort(endpointA, endpointA + 2 * partition);
     sort(endpointB, endpointB + 2 * partition);
 
+	cout<< "this is endpointA"<< endl;
     for (int x = 0; x < 2* partition; x++) {
-        cout << "end A[" << x << "]: " << endpointA[x] << ", end B[" << x << "]: " << endpointB[x] << endl;
+        //cout << "end A[" << x << "]: " << endpointA[x] << ", end B[" << x << "]: " << endpointB[x] << endl;
+		cout << endpointA[x]<< endl;
     }
 }
 
