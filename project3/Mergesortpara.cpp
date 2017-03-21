@@ -37,7 +37,7 @@ int main (int argc, char * argv[]) {
   /* PROGRAM STARTS HERE */
 
   ifstream in;                        // if stream to start pulling in file
-  in.open("mergepara.txt");
+  in.open("Input.txt");
 
   int n;                              // problem size
   in  >> n;                                             // read first line for l                                                                                                                     ength of letters in the list of random letters
