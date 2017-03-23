@@ -69,8 +69,11 @@ int main(int argc, char* argv[]) {
 }
 
 void pmerge(int* L, int* R, int size, int my_rank, int p, int* a) {
+  // log(n/2)
   int logOfHalf = log2(size / 2);
   int local_start = my_rank;
+  
+  // partition size of blocks
   int partition = ceil((double(size / 2) / (logOfHalf)));
 
   int* srankA = new int[partition];
@@ -107,6 +110,7 @@ void pmerge(int* L, int* R, int size, int my_rank, int p, int* a) {
     srankB[x] = Rank(R[x * logOfHalf], size / 2, L);
   }
 
+  // reduce calculated srank values
   MPI_Allreduce(srankA, totalsrankA, partition, MPI_INT, MPI_SUM,
                 MPI_COMM_WORLD);
   MPI_Allreduce(srankB, totalsrankB, partition, MPI_INT, MPI_SUM,
@@ -175,6 +179,7 @@ void pmerge(int* L, int* R, int size, int my_rank, int p, int* a) {
       cout << endl;
     }
 
+    // run shapes through smerge
     smerge(L, endpointA[x], endpointA[x + 1] - 1, R, endpointB[x],
            endpointB[x + 1] - 1, localOut, endpointA[x] + endpointB[x],
            endpointA[x + 1] + endpointB[x + 1]);
@@ -198,7 +203,8 @@ void pmerge(int* L, int* R, int size, int my_rank, int p, int* a) {
     for (int y = endpointB[2 * partition - 1]; y <= size / 2 - 1; y++)
       cout << R[y] << " ";
     cout << endl;
-
+    
+    // last shape
     smerge(L, endpointA[2 * partition - 1], size / 2 - 1, R,
            endpointB[2 * partition - 1], size / 2 - 1, localOut,
            endpointA[2 * partition - 1] + endpointB[2 * partition - 1], size);
@@ -214,6 +220,7 @@ void pmerge(int* L, int* R, int size, int my_rank, int p, int* a) {
 // returns log base 2 of x
 int log2(int x) { return (log(x) / log(2)); }
 
+// recursive function
 void mergesort(int* a, int n, int my_rank, int p) {
   int mid;
   if (n == 32) {
@@ -227,6 +234,7 @@ void mergesort(int* a, int n, int my_rank, int p) {
   return;
 }
 
+// smerge function
 void smerge(int* a, int a0, int a1, int* b, int b0, int b1, int* c, int c0,
             int c1) {
   int i = a0;
@@ -243,6 +251,7 @@ void smerge(int* a, int a0, int a1, int* b, int b0, int b1, int* c, int c0,
   while (j <= b1) c[k++] = b[j++];
 }
 
+// rank function
 int Rank(int value, int size, int* array) {
   if (size == 1) {
     if (value < array[0]) {
