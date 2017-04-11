@@ -17,6 +17,24 @@ private:
 
     }
 
+    // private recursive Search
+    Node* priv_search(Node* node, int q) {
+
+        // base case
+        if (node.is_leaf()) {
+            return node;
+        }
+
+        // check against left, right, middle
+        if (node.get_left().value() <= q ) {
+            priv_search(node.get_left(), q);
+        } else if (node.get_middle().value() <= q) {
+            priv_search(node.get_middle(), q);
+        } else {
+            priv_search(node.get_right(), q);
+        }
+    }
+
 
 public:
     // constructor
@@ -25,12 +43,8 @@ public:
     }
 
     // search function
-    Node* Search(Node* node, int q) {
-
-        if (root /* has no children */) {
-            root.get_left().Search()
-        }
-
+    Node* Search(int q) {
+        return priv_search(root, q);
     }
 
     // insert function

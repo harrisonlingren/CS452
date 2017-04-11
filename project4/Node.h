@@ -19,8 +19,8 @@ public:
     }
 
 
-    // is this a node...?
-    bool is_node() {
+    // is this a leaf...?
+    bool is_leaf() {
 
     }
 
@@ -66,7 +66,7 @@ public:
 
     // get Node value
     int value() {
-
+        return value;
     }
 
 
