@@ -78,27 +78,19 @@ public:
 
     // get_left, middle, right functions
     Node* get_left() {
-        if (has_left()) {
-            return children[0];
-
-        } else { return NULL; }
+        if (has_left()) { return children[0]; }
+        else { return NULL; }
     }
 
     Node* get_middle() {
-        if (has_middle()) {
-            return children[1];
-
-        } else { return NULL; }
+        if (has_middle()) { return children[1]; }
+        else { return NULL; }
     }
 
     Node* get_right() {
-        if (has_right() && has_middle()) {
-            return children[2];
-
-        } else if (has_right()) {
-            return children[1];
-
-        } else { return NULL; }
+        if (has_middle()) { return children[2]; }
+        else if (has_right()) { return children[1]; }
+        else { return NULL; }
     }
 
 
@@ -144,6 +136,11 @@ public:
 
     // remove child
     Node* remove_child(int pos) {
+
+    }
+
+    // shift children
+    void shift_children(int oldC, int newC) {
 
     }
 }
