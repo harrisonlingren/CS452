@@ -1,41 +1,45 @@
-#include "Leaf.h"
+#include "Node.h"
 
 using namespace std;
 
 class TwoThree {
 private:
-    // root leaf
-    Leaf* root;
+    // root node
+    Node* root;
 
     // absorb function
-    void absorb(Leaf* one, Leaf* two) {
+    void absorb(Node* one, Node* two) {
 
     }
 
     // discard function
-    void discard(Leaf* leaf) {
+    void discard(Node* node) {
 
     }
 
 
 public:
     // constructor
-    TwoThree(Leaf* r) {
+    TwoThree(Node* r) {
         root = r;
     }
 
     // search function
-    Leaf* Search(Leaf* leaf, int q) {
+    Node* Search(Node* node, int q) {
+
+        if (root /* has no children */) {
+            root.get_left().Search()
+        }
 
     }
 
     // insert function
-    void Insert(Leaf* leaf) {
+    void Insert(Node* node) {
 
     }
 
     // delete function
-    void Delete(Leaf* leaf) {
+    void Delete(Node* node) {
 
     }
 }

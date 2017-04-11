@@ -1,26 +1,26 @@
 using namespace std;
 
-class Leaf {
+class Node {
 private:
-    // create empty Leaf
+    // create empty Node
     void init() {
 
     }
 
 public:
     // constructor (no val)
-    Leaf() {
+    Node() {
         init();
     }
 
     // constructor (with val)
-    Leaf(int val) {
+    Node(int val) {
 
     }
 
 
-    // is this a leaf...?
-    bool is_leaf() {
+    // is this a node...?
+    bool is_node() {
 
     }
 
@@ -32,20 +32,20 @@ public:
 
 
     // init parent & children leaves
-    Leaf* parent; Leaf* child[6];
+    Node* parent; Node* child[6];
     int children_values[6]; int count_children;
 
 
     // get_left, middle, right functions
-    Leaf* get_left() {
+    Node* get_left() {
 
     }
 
-    Leaf* get_middle() {
+    Node* get_middle() {
 
     }
 
-    Leaf* get_right() {
+    Node* get_right() {
 
     }
 
@@ -64,20 +64,20 @@ public:
     }
 
 
-    // get Leaf value
+    // get Node value
     int value() {
 
     }
 
 
     // add child
-    void add_child(Leaf* leaf) {
+    void add_child(Node* node) {
 
     }
 
 
     // remove child
-    Leaf* remove_child(int pos) {
+    Node* remove_child(int pos) {
 
     }
 }
