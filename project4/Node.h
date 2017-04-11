@@ -17,9 +17,7 @@ private:
 
 public:
     // constructor (no val)
-    Node() {
-        init();
-    }
+    Node() { init(); }
 
     // constructor (with val)
     Node(int v) {
@@ -30,11 +28,8 @@ public:
 
     // is this a leaf...?
     bool is_leaf() {
-        if (count_children > 0) {
-            return false;
-        } else {
-            return true;
-        }
+        if (count_children > 0) { return false; }
+        else { return true; }
     }
 
 
@@ -82,26 +77,18 @@ public:
     }
 
     bool has_middle() {
-        if (has_right() && children >= 3) {
-            return true;
-        } else {
-            return false;
-        }
+        if (has_right() && children >= 3) { return true; }
+        else { return false; }
     }
 
     bool has_right() {
-        if (has_left() && children >= 2) {
-            return true;
-        } else {
-            return false;
-        }
+        if (has_left() && children >= 2) { return true; }
+        else { return false; }
     }
 
 
     // get Node value
-    int value() {
-        return value;
-    }
+    int get_value() { return value; }
 
 
     // add child
