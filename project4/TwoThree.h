@@ -23,17 +23,17 @@ private:
     Node* priv_search(Node* node, int q) {
 
         // base case
-        if (node.is_leaf()) { return node; }
+        if (node->is_leaf()) { return node; }
 
         // check against left, right, middle
-        if (node.get_left().get_value() <= q ) {
-            priv_search(node.get_left(), q);
+        if (node->get_left()->get_value() <= q ) {
+            priv_search(node->get_left(), q);
 
-        } else if (node.get_middle().get_value() <= q) {
-            priv_search(node.get_middle(), q);
+        } else if (node->get_middle()->get_value() <= q) {
+            priv_search(node->get_middle(), q);
 
         } else {
-            priv_search(node.get_right(), q);
+            priv_search(node->get_right(), q);
 
         }
     }
@@ -59,4 +59,4 @@ public:
     void Delete(Node* node) {
 
     }
-}
+};

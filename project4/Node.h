@@ -1,3 +1,4 @@
+#include <cstddef>
 using namespace std;
 
 class Node {
@@ -9,8 +10,8 @@ private:
     }
 
     void new_leaf() {
-        for (size_t x = 0; x < 6; x++) {
-            children[x] = NULL;
+        for (int x = 0; x < 6; x++) {
+            child[x] = NULL;
             children_values[x] = -1;
         } count_children = 0;
     }
@@ -18,12 +19,12 @@ private:
     // REDO THIS - sort children to balance all nodes
     void sort_children() {
         Node* t;
-        for (size_t x = 0; x < count_children; x++) {
-            for (size_t y = 0; y < count_children; y++) {
-                if (children[j].get_value() > children[j+1].get_value()) {
-                    t = children[j];
-                    children[j] = children[j+1];
-                    children[j+1] = temp;
+        for (int x = 0; x < count_children; x++) {
+            for (int y = 0; y < count_children; y++) {
+                if (child[y]->get_value() > child[y+1]->get_value()) {
+                    t = child[y];
+                    child[y] = child[y+1];
+                    child[y+1] = t;
                 }
             }
         }
@@ -31,14 +32,14 @@ private:
 
     // calculate new values for children
     void calc_child_values() {
-        for (size_t x = 0; x < 6; x++) {
-            if (i < count_children) { calc_value(i); }
-            else { children_values[i] = -1; }
+        for (int x = 0; x < 6; x++) {
+            if (x < count_children) { calc_value(x); }
+            else { children_values[x] = -1; }
         }
     }
 
     void calc_value(int a) {
-        children_values[a] = children[a].get_value();
+        children_values[a] = get_value();
     }
 
 
@@ -55,7 +56,7 @@ public:
 
     // is this a leaf...?
     bool is_leaf() {
-        if (value == -1) { return false; }
+        if (count_children == 0) { return true; }
         else { return true; }
     }
 
@@ -78,18 +79,18 @@ public:
 
     // get_left, middle, right functions
     Node* get_left() {
-        if (has_left()) { return children[0]; }
+        if (has_left()) { return child[0]; }
         else { return NULL; }
     }
 
     Node* get_middle() {
-        if (has_middle()) { return children[1]; }
+        if (has_middle()) { return child[1]; }
         else { return NULL; }
     }
 
     Node* get_right() {
-        if (has_middle()) { return children[2]; }
-        else if (has_right()) { return children[1]; }
+        if (has_middle()) { return child[2]; }
+        else if (has_right()) { return child[1]; }
         else { return NULL; }
     }
 
@@ -101,12 +102,12 @@ public:
     }
 
     bool has_middle() {
-        if (has_right() && children >= 3) { return true; }
+        if (has_right() && count_children >= 3) { return true; }
         else { return false; }
     }
 
     bool has_right() {
-        if (has_left() && children >= 2) { return true; }
+        if (has_left() && count_children >= 2) { return true; }
         else { return false; }
     }
 
@@ -118,7 +119,7 @@ public:
             if (count_children == 3) {
                 return children_values[2];
             } else if (count_children == 2) {
-                return children_values[1]
+                return children_values[1];
             } else {
                 return children_values[0];
             }
@@ -128,9 +129,9 @@ public:
 
     // add child
     void add_child(Node* node) {
-        children[count_children++] = node;
+        child[count_children++] = node;
         value = -1;
-        node.set_parent(this);
+        node->set_parent(this);
         sort_children(); calc_child_values();
     }
 
@@ -143,4 +144,4 @@ public:
     void shift_children(int oldC, int newC) {
 
     }
-}
+};
