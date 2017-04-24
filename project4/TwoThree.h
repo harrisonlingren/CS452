@@ -1,4 +1,5 @@
 #include "Node.h"
+#include <iostream>
 
 using namespace std;
 
@@ -8,8 +9,33 @@ private:
     Node* root;
 
     // absorb function
-    void absorb(Node* one, Node* two) {
+    Node* absorb(Node* one, Node* two) {
+        if (root == two) {
+            Node* mega;
+            mega->add_child(one);
+            mega->add_child(two);
+            return mega;
+        }
 
+        if (two->parent->count_children < 3) {
+            // "easy" insertion
+            if (two->parent->get_middle() == NULL) {
+                two->parent->add_child(one);
+            } else {
+
+            }
+
+            print_tree();
+            return NULL;
+
+        } else {
+            /* Overfill p by inserting a. Create a p-left and move the two smallest children of p to p->left */
+            absorb(two->parent->get_left(), two->parent);
+        }
+    }
+
+    void print_tree() {
+        cout << "we're printing a tree here! nice!";
     }
 
 
@@ -51,12 +77,16 @@ public:
     }
 
     // insert function
-    void Insert(Node* node) {
-
+    void Insert(int val) {
+        Node* n = new Node(val);
+        Node* s = Search(val);
+        if (n == s) {
+            return;
+        } absorb(n, s);
     }
 
     // delete function
-    void Delete(Node* node) {
+    void Delete(int val) {
 
     }
 };

@@ -39,7 +39,7 @@ private:
     }
 
     void calc_value(int a) {
-        children_values[a] = get_value();
+        children_values[a] = child[a]->get_value();
     }
 
 
@@ -137,7 +137,7 @@ public:
 
     // remove child
     Node* remove_child(int pos) {
-
+        return NULL;
     }
 
     // shift children
