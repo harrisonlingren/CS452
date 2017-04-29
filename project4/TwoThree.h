@@ -206,33 +206,28 @@ public:
     void Print() {
         cout << endl;
 
-        if (nullptr == root) {
-            return;
-        }
-        int level = 0;
+    	if (root == NULL) cout << "Empty is tree.";
 
-        // Use a queue for breadth-first traversal of the tree.  The pair is
-        // to keep track of the depth of each node.  (Depth of root node is 1.)
-        typedef std::pair<Node*, int> node_level;
+    	else {
 
-        queue<node_level> q;
-        q.push(node_level(root, 1));
-
-        while (!q.empty()) {
-            node_level nl = q.front();
-            q.pop();
-            if (nullptr != (root = nl.first)) {
-                if (level != nl.second) {
-                    std::cout << " Level " << nl.second << ": ";
-                    level = nl.second;
-                }
-                std::cout << n->data << ' ';
-                q.push(node_level(n->left,  1 + level));
-                q.push(node_level(n->right, 1 + level));
-            }
-        }
-        std::cout << std::endl;
-
+    		vector<Node*> v;  //list to print
+    		vector<Node*> c;  //list to hold children of v, for later use
+    		v.push_back(root);  //first level
+    		while (!v.empty()){
+    			for (int x = 0; x < v.size(); x++) {  //print all nodes
+    				cout << "   "; v[x]->print(); cout << ", ";
+    			}
+    			cout << endl;   //end this level
+    			for (int i = 0; i < v.size(); i++){ //find children of nodes in v
+    				if (v[i]->left) c.push_back(v[i]->get_left());
+    				if (v[i]->middle) c.push_back(v[i]->get_middle());
+    				if (v[i]->right) c.push_back(v[i]->get_right());
+    			}
+    			v.clear();
+    			v.swap(c);
+    			c.clear();
+    		}
+    	}
 
 
         cout << endl;
