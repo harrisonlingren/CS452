@@ -1,5 +1,6 @@
 #include "Node.h"
 #include <iostream>
+#include <queue>
 
 using namespace std;
 
@@ -9,39 +10,150 @@ private:
     Node* root;
 
     // absorb function
-    Node* absorb(Node* one, Node* two) {
-        if (root == two) {
-            Node* mega;
+    void absorb(Node* one, Node* two) {
+        if (two == root) {
+            Node* mega = new Node();
             mega->add_child(one);
             mega->add_child(two);
-            return mega;
-        }
-
-        if (two->parent->count_children < 3) {
-            // "easy" insertion
-            if (two->parent->get_middle() == NULL) {
-                two->parent->add_child(one);
-            } else {
-
-            }
-
-            print_tree();
-            return NULL;
+            root = mega;
 
         } else {
-            /* Overfill p by inserting a. Create a p-left and move the two smallest children of p to p->left */
-            absorb(two->parent->get_left(), two->parent);
+            Node* p = two->get_parent();
+            p->add_child(one);
+
+            int count_children = p->count_children;
+            if (count_children > 3) {
+                Node* p_l = new Node();
+                int count_left = count_children / 2;
+                int count_right = count_children - count_left;
+
+                for (int x = 0; x < count_left; x++) {
+                    p_l->add_child( p->child[x] );
+                    p->child[x] = p->child[x + count_left];
+                }
+
+                if (count_left < count_right) {
+                    p->child[count_left] = p->child[count_children - 1];
+                }
+
+                for (int x = count_right; x < count_children; ++x) {
+                    p->child[x] = NULL;
+                }
+
+                p->count_children = count_right;
+                p->calc_child_values();
+                absorb(p_l, p);
+
+            } else if (p->parent != NULL) {
+                p->parent->propagate_children();
+            }
         }
     }
 
-    void print_tree() {
-        cout << "we're printing a tree here! nice!";
+    void print_one(Node* node) {
+        if (node->is_leaf()) {
+            node->print();
+            return;
+
+        } else {
+            for (int x = 0; x < node->count_children; x++) {
+                print_one(node->child[x]);
+            }
+        }
     }
 
 
     // discard function
     void discard(Node* node) {
+        //let p be the parent of a
+        Node* p = node->get_parent();
 
+        // Remove the connection between p and a
+        for (int x = 0; x < p->count_children; x++) {
+            if (p->child[x] == node) { p->remove_child(x); }
+        }
+
+        delete(node);
+        bool recurse_flag;  // so we know whether to keep going
+
+        /*if (p has 2 children)
+            return T; // might have to "re-adjust" p (and up) */
+        // p has 1 child
+
+        if (p->count_children >= 2) {
+            return;
+        } else if (p->get_parent() == NULL) {
+            if (!p->child[0]->is_leaf()) {
+                root = p->child[0];
+                delete(p);
+            } return;
+        }
+
+
+        // let totchildren = number of children among all siblings of p (including p)     // totchildren  [3,7]
+
+        Node* totchildren = p->get_parent();
+        int num_totchildren = 0;
+        int num_parent;
+
+
+        for (int x = 0; x < totchildren->count_children; x++) {
+            num_totchildren += totchildren->child[x]->count_children;
+            if (totchildren->child[x]->count_children == 1) { num_parent = x; }
+        }
+
+        if ( num_totchildren >= 4) {
+            if (totchildren->count_children == 2) {
+                if (totchildren->child[0]->count_children == 3) {
+                    totchildren->shift_children(0,1);
+                } else {
+                    totchildren->shift_children(1,0);
+                }
+
+            } else if (num_totchildren == 5) {
+                int y;
+                if (num_parent == 2) { y = 1; }
+                else { y = num_parent + 1; }
+
+                totchildren->shift_children(num_parent, y);
+
+            } else {
+                if (num_parent == 0) {
+                    totchildren->shift_children(1,0);
+                    if (totchildren->child[1]->count_children == 1) {
+                        totchildren->shift_children(2,1);
+                    }
+
+                } else if (num_parent == 2) {
+                    totchildren->shift_children(1,2);
+                    if (totchildren->child[1]->count_children == 1) {
+                        totchildren->shift_children(0,1);
+                    }
+
+                } else {
+                    int y;
+                    if (totchildren->child[0]->count_children > totchildren->child[2]->count_children) {
+                        y = 0;
+                    } else {
+                        y = 1;
+                    } totchildren->shift_children(y, 1);
+                }
+            }
+
+        } else {
+            if (num_parent == 0) {
+                totchildren->shift_children(0,1);
+            } else {
+                totchildren->shift_children(1,0);
+            }
+
+            discard(p);
+            recurse_flag = true;
+        }
+
+        if (!recurse_flag) {
+            totchildren->propagate_children();
+        }
     }
 
 
@@ -55,7 +167,7 @@ private:
         if (node->get_left()->get_value() <= q ) {
             priv_search(node->get_left(), q);
 
-        } else if (node->get_middle()->get_value() <= q) {
+        } else if (node-> has_middle() && node->get_middle()->get_value() <= q) {
             priv_search(node->get_middle(), q);
 
         } else {
@@ -87,6 +199,42 @@ public:
 
     // delete function
     void Delete(int val) {
+        Node* node = Search(val);
+        if (node->get_value() == val) { discard(node); }
+    }
 
+    void Print() {
+        cout << endl;
+
+        if (nullptr == root) {
+            return;
+        }
+        int level = 0;
+
+        // Use a queue for breadth-first traversal of the tree.  The pair is
+        // to keep track of the depth of each node.  (Depth of root node is 1.)
+        typedef std::pair<Node*, int> node_level;
+
+        queue<node_level> q;
+        q.push(node_level(root, 1));
+
+        while (!q.empty()) {
+            node_level nl = q.front();
+            q.pop();
+            if (nullptr != (root = nl.first)) {
+                if (level != nl.second) {
+                    std::cout << " Level " << nl.second << ": ";
+                    level = nl.second;
+                }
+                std::cout << n->data << ' ';
+                q.push(node_level(n->left,  1 + level));
+                q.push(node_level(n->right, 1 + level));
+            }
+        }
+        std::cout << std::endl;
+
+
+
+        cout << endl;
     }
 };
